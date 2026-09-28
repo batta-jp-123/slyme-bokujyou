@@ -1,0 +1,888 @@
+/* スライム牧場
+   スマホは1列（HUD → 場面 → ごうせい台/すみか → タブパネル）、PC幅は右にタブパネルを並べる2列。
+   パネルと場面の高さは固定し、ずかん・けいとうずを開いても下の広告を押し下げない */
+
+.game-page {
+  max-width: 900px;
+}
+
+.sf-root {
+  position: relative;
+  max-width: 860px;
+  margin: 0 auto 2rem;
+}
+
+.sf-root [hidden] {
+  display: none !important;
+}
+
+.sf-frame {
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+}
+
+.sf-root button {
+  font-family: inherit;
+  font-weight: 700;
+  border: 0;
+  cursor: pointer;
+}
+
+.sf-root button:focus-visible {
+  outline: 3px solid #2F6F8F;
+  outline-offset: 2px;
+}
+
+/* ---- HUD（数字は等幅。桁が変わってもガタつかない） ---- */
+.sf-hud {
+  display: grid;
+  grid-template-columns: 1fr 1fr auto;
+  gap: 6px;
+  padding: 10px 10px 6px;
+  font-variant-numeric: tabular-nums;
+}
+
+.sf-stat {
+  background: #FFF3E0;
+  border-radius: 10px;
+  padding: 5px 9px;
+  line-height: 1.25;
+  min-width: 0;
+}
+
+.sf-stat small {
+  display: block;
+  font-size: 10px;
+  color: #8a4a12;
+  letter-spacing: 0.06em;
+}
+
+.sf-stat b {
+  display: block;
+  font-size: 16px;
+  font-weight: 900;
+  color: #333;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: clip;
+}
+
+.sf-stat-net {
+  background: #EAF6EC;
+}
+
+.sf-stat-net small {
+  color: #1F4A32;
+}
+
+.sf-unit {
+  font-size: 11px;
+  font-weight: 500;
+}
+
+/* ---- 場面タブ ---- */
+.sf-scene-tabs {
+  display: flex;
+  gap: 6px;
+  padding: 4px 10px 8px;
+}
+
+.sf-scene-tabs button {
+  flex: 1;
+  padding: 8px 0;
+  font-size: 13px;
+  border-radius: 100px;
+  background: #F3EFE8;
+  color: #666;
+}
+
+.sf-scene-tabs button.on {
+  background: #E67E22;
+  color: #fff;
+}
+
+.sf-scene-tabs button .sf-badge {
+  display: inline-block;
+  min-width: 1.4em;
+  margin-left: 3px;
+  padding: 0 4px;
+  border-radius: 100px;
+  background: #D6412A;
+  color: #fff;
+  font-size: 10px;
+  line-height: 1.5;
+}
+
+/* ---- 場面（canvas） ---- */
+.sf-stage {
+  position: relative;
+  background: #c9ec9f;
+}
+
+#sf-canvas {
+  display: block;
+  width: 100%;
+  height: auto;
+  /* ドラッグ合成・捕獲のタップをページのスクロールに奪われないように。枠の外は普通にスクロールできる */
+  touch-action: none;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+
+.sf-area-chips {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  right: 54px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.sf-chip {
+  font-size: 11px;
+  padding: 3px 9px;
+  border-radius: 100px;
+  background: rgba(255, 255, 255, 0.92);
+  color: #333;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15);
+}
+
+.sf-root .sf-chip.on {
+  background: #E67E22;
+  color: #fff;
+}
+
+.sf-root .sf-chip.lock {
+  color: #999;
+  cursor: default;
+}
+
+/* ---- canvas の下のひとこと（選んだスライムの情報・次にやること） ---- */
+.sf-tip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  margin: 8px 10px 0;
+  padding: 6px 10px;
+  border-radius: 10px;
+  background: #FFFDF6;
+  border: 1px solid #F0E6D2;
+  font-size: 12px;
+  line-height: 1.45;
+  color: #444;
+}
+
+.sf-tip b {
+  color: #B3560A;
+}
+
+.sf-tip .sf-tip-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.sf-tip .sf-btn {
+  flex-shrink: 0;
+}
+
+/* ---- ごうせい台・すみか・のはら/とうばつの操作カード ---- */
+.sf-stations {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  padding: 8px 10px 10px;
+  min-height: 96px;
+}
+
+.sf-card {
+  border: 2px dashed #d9cdb8;
+  border-radius: 12px;
+  padding: 6px 8px 8px;
+  background: #FFFDF9;
+  min-width: 0;
+}
+
+.sf-card.wide {
+  grid-column: 1 / -1;
+}
+
+.sf-card.lock {
+  opacity: 0.6;
+}
+
+.sf-card h4 {
+  margin: 0 0 4px;
+  font-size: 12px;
+  color: #8a4a12;
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 4px;
+}
+
+.sf-card h4 span {
+  font-weight: 500;
+  color: #999;
+  font-size: 10px;
+  white-space: nowrap;
+}
+
+/* 施設の絵つきの見出し（ごうせい台・すみか）。h4 の flex に img と文字を1つの子として並べる */
+.sf-card h4 .sf-fac-ttl {
+  font-style: normal;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+}
+
+.sf-fac-img {
+  width: 22px;
+  height: 22px;
+  object-fit: contain;
+}
+
+.sf-ic .sf-fac-img {
+  width: 32px;
+  height: 32px;
+}
+
+.sf-card p {
+  margin: 0 0 4px;
+  font-size: 11px;
+  color: #666;
+  line-height: 1.4;
+}
+
+.sf-slots {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.sf-slot {
+  width: 46px;
+  height: 46px;
+  flex-shrink: 0;
+  border-radius: 10px;
+  background: #F3EFE8;
+  display: grid;
+  place-items: center;
+  position: relative;
+  padding: 0;
+}
+
+.sf-slot img {
+  max-width: 40px;
+  max-height: 40px;
+  pointer-events: none;
+}
+
+.sf-slot.drop-ok {
+  background: #FFF1B8;
+  box-shadow: 0 0 0 3px #F2C12E;
+}
+
+.sf-slot .sf-shiny-mark {
+  position: absolute;
+  right: -2px;
+  top: -4px;
+  font-size: 12px;
+}
+
+.sf-slot-empty {
+  color: #bbb;
+  font-size: 18px;
+}
+
+.sf-egg {
+  font-size: 30px;
+  line-height: 1;
+  display: inline-block;
+  animation: sf-wobble 0.9s ease-in-out infinite;
+}
+
+@keyframes sf-wobble {
+  0%, 100% { transform: rotate(-8deg); }
+  50% { transform: rotate(8deg); }
+}
+
+.sf-timer {
+  margin-left: auto;
+  text-align: right;
+  font-size: 11px;
+  color: #666;
+  line-height: 1.3;
+  font-variant-numeric: tabular-nums;
+}
+
+.sf-btn {
+  padding: 6px 10px;
+  font-size: 12px;
+  border-radius: 100px;
+  background: #E67E22;
+  color: #fff;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.sf-card .sf-slots .sf-btn {
+  margin-left: auto;
+}
+
+.sf-root .sf-btn:disabled,
+.sf-root .sf-btn.lock {
+  background: #EDE7DC;
+  color: #999;
+  cursor: default;
+}
+
+.sf-root .sf-btn.done {
+  background: #EAF6EC;
+  color: #1F4A32;
+  cursor: default;
+}
+
+.sf-root .sf-btn.green {
+  background: #2E8B57;
+}
+
+.sf-root .sf-btn.big {
+  padding: 9px 18px;
+  font-size: 14px;
+}
+
+/* ---- エサ（押すと、牧場で選んだ子にあげる） ---- */
+.sf-foods {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-bottom: 6px;
+}
+
+.sf-food {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  padding: 4px 7px;
+  border-radius: 100px;
+  background: #FFF3E0;
+  color: #8a4a12;
+  font-size: 11px;
+  line-height: 1.2;
+}
+
+.sf-food b {
+  font-size: 14px;
+}
+
+.sf-food i {
+  font-style: normal;
+  font-weight: 900;
+  min-width: 1.2em;
+  padding: 0 4px;
+  border-radius: 100px;
+  background: #E67E22;
+  color: #fff;
+  font-variant-numeric: tabular-nums;
+}
+
+.sf-root .sf-food:disabled {
+  background: #F1EDE6;
+  color: #aaa;
+  cursor: default;
+}
+
+.sf-root .sf-food:disabled i {
+  background: #d6d0c6;
+}
+
+/* ---- 下のタブパネル ---- */
+.sf-panel-tabs {
+  display: flex;
+  gap: 4px;
+  padding: 8px 10px 0;
+  border-top: 1px solid #F0E9DE;
+}
+
+.sf-panel-tabs button {
+  flex: 1;
+  padding: 7px 0;
+  font-size: 12px;
+  background: transparent;
+  color: #777;
+  border-radius: 10px 10px 0 0;
+  white-space: nowrap;
+}
+
+.sf-panel-tabs button.on {
+  background: #FFF3E0;
+  color: #B3560A;
+}
+
+.sf-panel {
+  height: 260px;
+  overflow: auto;
+  padding: 10px 10px 12px;
+  background: #FFF3E0;
+  font-size: 12px;
+  overscroll-behavior: contain;
+}
+
+.sf-shop {
+  display: grid;
+  gap: 6px;
+}
+
+.sf-shop-head {
+  font-weight: 900;
+  color: #B3560A;
+  margin: 4px 2px 0;
+}
+
+.sf-row {
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+  background: #fff;
+  border-radius: 10px;
+  padding: 6px 8px;
+}
+
+.sf-ic {
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  font-size: 20px;
+}
+
+.sf-ic img {
+  max-width: 34px;
+  max-height: 34px;
+}
+
+.sf-nm {
+  font-weight: 900;
+  line-height: 1.25;
+  min-width: 0;
+}
+
+.sf-nm small {
+  display: block;
+  font-weight: 500;
+  color: #777;
+  font-size: 11px;
+}
+
+/* ずかん */
+.sf-dex-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 6px;
+  font-weight: 900;
+  color: #B3560A;
+}
+
+.sf-dex-head small {
+  color: #777;
+  font-weight: 500;
+}
+
+.sf-dex {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 6px;
+}
+
+/* 図鑑のマスはボタン（タップで手に入れかた） */
+.sf-dex-cell {
+  position: relative;
+  display: block;
+  width: 100%;
+  background: #fff;
+  border-radius: 10px;
+  padding: 4px 2px 3px;
+  text-align: center;
+  font-size: 9.5px;
+  font-weight: 500;
+  line-height: 1.2;
+  color: #444;
+}
+
+.sf-dex-cell:active {
+  transform: scale(0.96);
+}
+
+.sf-dex-cell img {
+  display: block;
+  height: 40px;
+  max-width: 100%;
+  margin: 0 auto 2px;
+  object-fit: contain;
+}
+
+.sf-root img.sil {
+  filter: brightness(0);
+  opacity: 0.45;
+}
+
+.sf-dex-cell.unk {
+  color: #aaa;
+}
+
+.sf-dex-cell .sf-shiny-mark {
+  position: absolute;
+  top: 1px;
+  right: 3px;
+  font-size: 11px;
+}
+
+.sf-dex-note {
+  margin-top: 8px;
+  color: #777;
+}
+
+/* けいとうず（横に長いのでタブの中だけ横スクロール。親の flex を広げない） */
+.sf-tree-wrap {
+  overflow-x: auto;
+  width: 0;
+  min-width: 100%;
+}
+
+.sf-tree-wrap svg {
+  display: block;
+}
+
+.sf-rebirth {
+  text-align: center;
+  padding: 10px 8px;
+  color: #555;
+  line-height: 1.6;
+}
+
+.sf-rebirth .big {
+  font-size: 40px;
+  line-height: 1;
+  margin-bottom: 6px;
+}
+
+.sf-rebirth b {
+  color: #B3560A;
+}
+
+/* ---- ダイアログ（おかえり・進化先えらび・転生の確認） ---- */
+.sf-modal {
+  position: absolute;
+  inset: 0;
+  z-index: 70;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 60px 12px 12px;
+  background: rgba(40, 30, 20, 0.45);
+  border-radius: 16px;
+}
+
+.sf-modal-box {
+  width: 100%;
+  max-width: 340px;
+  max-height: 100%;
+  overflow: auto;
+  background: #fff;
+  border-radius: 16px;
+  padding: 18px 16px 16px;
+  text-align: center;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+  font-size: 14px;
+  line-height: 1.6;
+  color: #333;
+}
+
+.sf-modal-box h3 {
+  margin: 0 0 8px;
+  font-size: 18px;
+  color: #E67E22;
+}
+
+.sf-modal-box .sf-num {
+  font-size: 22px;
+  font-weight: 900;
+  color: #B3560A;
+  font-variant-numeric: tabular-nums;
+}
+
+.sf-modal-box ul {
+  list-style: none;
+  padding: 0;
+  margin: 8px 0 12px;
+  font-size: 13px;
+}
+
+/* 図鑑の説明（見出しは中央・本文は左寄せ） */
+.sf-modal-box .sf-dexinfo {
+  text-align: left;
+}
+
+.sf-dexinfo > img {
+  display: block;
+  height: 72px;
+  margin: 0 auto 4px;
+  object-fit: contain;
+}
+
+.sf-dexinfo h3 {
+  text-align: center;
+}
+
+.sf-dexinfo h4 {
+  margin: 10px 0 2px;
+  font-size: 12px;
+  color: #B3560A;
+}
+
+.sf-dexinfo-sub {
+  margin: 0;
+  font-size: 11px;
+  color: #888;
+  text-align: center;
+}
+
+.sf-dexinfo-note {
+  margin: 4px 0 0;
+  font-size: 13px;
+  text-align: center;
+}
+
+.sf-modal-box .sf-dexinfo ul {
+  margin: 0;
+  font-size: 12.5px;
+  line-height: 1.5;
+}
+
+.sf-dexinfo li {
+  padding: 3px 0;
+  border-top: 1px dashed #eee;
+}
+
+.sf-dexinfo li:first-child {
+  border-top: 0;
+}
+
+.sf-modal-actions {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 10px;
+}
+
+/* メンバーえらび（3〜4列のカード。横1列の .sf-choice に匹数ぶん流し込むと1匹が細長い棒になっていた） */
+.sf-modal-box.wide {
+  max-width: 480px;
+}
+
+.sf-modal-box h3 small {
+  font-size: 12px;
+  color: #999;
+  font-weight: 500;
+}
+
+.sf-party {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+  margin: 8px 0 4px;
+}
+
+.sf-party-card {
+  position: relative;
+  display: block;
+  width: 100%;
+  padding: 6px 4px 5px;
+  border-radius: 12px;
+  background: #FFF3E0;
+  color: #333;
+  font-size: 11px;
+  line-height: 1.25;
+  box-shadow: inset 0 0 0 2px transparent;
+}
+
+.sf-party-card img {
+  display: block;
+  height: 40px;
+  max-width: 100%;
+  margin: 0 auto 2px;
+  object-fit: contain;
+}
+
+.sf-party-card b {
+  display: block;
+  font-size: 11.5px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.sf-party-card small {
+  display: block;
+  font-size: 10px;
+  color: #777;
+  font-weight: 500;
+}
+
+.sf-party-card small.adv {
+  color: #2E8B57;
+  font-weight: 900;
+}
+
+.sf-party-card small.dis {
+  color: #c0392b;
+  font-weight: 900;
+}
+
+.sf-party-card.on {
+  background: #EAF6EC;
+  box-shadow: inset 0 0 0 2px #2fbf3a;
+}
+
+.sf-party-num {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #2fbf3a;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 900;
+  display: grid;
+  place-items: center;
+}
+
+@media (min-width: 480px) {
+  .sf-party {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+.sf-choice {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  margin: 10px 0 6px;
+}
+
+.sf-choice button {
+  flex: 1;
+  max-width: 130px;
+  padding: 8px 6px;
+  border-radius: 12px;
+  background: #FFF3E0;
+  color: #333;
+  font-size: 13px;
+}
+
+.sf-choice img {
+  display: block;
+  height: 56px;
+  margin: 0 auto 4px;
+}
+
+.sf-remember {
+  font-size: 12px;
+  color: #666;
+}
+
+.sf-noscript {
+  padding: 1rem;
+  text-align: center;
+}
+
+/* ---- 本文の表 ---- */
+/* 表の min-width がページ幅の計算に効いてスマホで横スクロールが出るので、幅0から広げて遮断する */
+.sf-table-wrap {
+  overflow-x: auto;
+  width: 0;
+  min-width: 100%;
+  margin-bottom: 0.75rem;
+}
+
+.sf-table {
+  border-collapse: collapse;
+  font-size: 0.8rem;
+  min-width: 520px;
+  color: #444;
+}
+
+.sf-table th,
+.sf-table td {
+  border: 1px solid #eee2cf;
+  padding: 4px 6px;
+  text-align: left;
+}
+
+.sf-table thead th {
+  background: #FFF3E0;
+}
+
+/* ---- PC幅: 右にタブパネルを並べる ---- */
+@media (min-width: 860px) {
+  .sf-frame {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 320px;
+  }
+
+  .sf-right {
+    display: flex;
+    flex-direction: column;
+    border-left: 1px solid #F0E9DE;
+    min-height: 0;
+  }
+
+  .sf-panel-tabs {
+    border-top: 0;
+    padding-top: 10px;
+  }
+
+  .sf-panel-tabs button {
+    font-size: 11px;
+    letter-spacing: -0.02em;
+  }
+
+  /* 高さ0から伸ばす: 中身の高さで2列の行が伸びると、左の場面の下に空白ができる */
+  .sf-panel {
+    flex: 1 1 0;
+    height: 0;
+    min-height: 0;
+  }
+
+  .sf-dex {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .sf-dex-cell img {
+    height: 48px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sf-egg {
+    animation: none;
+  }
+}
+
+/* たんけんの行き先カードに並べる「ここでしか会えない子」3匹の絵（9/18 行き先ごとに3種にした） */
+.sf-tk-finds img {
+  max-width: 36px;
+  max-height: 36px;
+  vertical-align: middle;
+}
