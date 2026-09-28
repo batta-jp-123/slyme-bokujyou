@@ -1,1 +1,131 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>スライム牧場 - 捕まえて合成・進化！ボスとバトルする放置ゲーム（無料）| ひなテックGames</title>
+  <meta name="description" content="タマゴを買う・のはらで捕まえる・すみかで産ませるの3つでスライムを増やし、同じスライムを重ねると進化。合成で新しいスライムを見つけて、突然変異のきらきらを狙って、強くなったらボスをとうばつ。閉じている間もコインがたまる無料の放置ゲーム。ダウンロード不要でPC・スマホから遊べる。">
+  <link rel="stylesheet" href="../../css/style.css">
+  <link rel="stylesheet" href="style.css?v=20260918a">
+</head>
+<body>
+  <div id="header"></div>
 
+  <div class="game-page">
+    <h1 class="game-page-title">スライム牧場</h1>
+    <div class="game-page-tags">
+      <a href="../../tags/idle/" class="tag">放置・育成</a>
+      <a href="../../tags/puzzle/" class="tag">パズル</a>
+    </div>
+
+    <div class="game-container sf-root" id="sf-root">
+      <div class="sf-frame">
+        <div class="sf-left">
+          <div class="sf-hud">
+            <div class="sf-stat"><small>コイン</small><b id="sf-coins">0</b></div>
+            <div class="sf-stat"><small>しゅうにゅう</small><b><span id="sf-cps">0</span><span class="sf-unit">/秒</span></b></div>
+            <div class="sf-stat sf-stat-net"><small>あみ</small><b><span id="sf-nets">8</span><span class="sf-unit" id="sf-netmax">/8</span></b></div>
+          </div>
+          <div class="sf-scene-tabs" role="tablist">
+            <button type="button" class="on" data-scene="ranch" role="tab" aria-selected="true">ぼくじょう</button>
+            <button type="button" data-scene="field" role="tab" aria-selected="false">のはら</button>
+            <button type="button" data-scene="battle" role="tab" aria-selected="false">とうばつ</button>
+            <button type="button" data-scene="tanken" role="tab" aria-selected="false">たんけん</button>
+          </div>
+          <div class="sf-stage" id="sf-stage">
+            <canvas id="sf-canvas" width="400" height="330"></canvas>
+            <div class="sf-area-chips" id="sf-area-chips" hidden></div>
+          </div>
+          <div class="sf-tip" id="sf-tip"></div>
+          <div class="sf-stations" id="sf-stations"></div>
+        </div>
+        <div class="sf-right">
+          <div class="sf-panel-tabs" role="tablist">
+            <button type="button" class="on" data-panel="egg" role="tab">タマゴ</button>
+            <button type="button" data-panel="fac" role="tab">しせつ</button>
+            <button type="button" data-panel="dex" role="tab">ずかん</button>
+            <button type="button" data-panel="tree" role="tab">けいとうず</button>
+            <button type="button" data-panel="rebirth" role="tab">にじ</button>
+          </div>
+          <div class="sf-panel" id="sf-panel"></div>
+        </div>
+      </div>
+      <div class="sf-modal" id="sf-modal" hidden><div class="sf-modal-box" id="sf-modal-box" role="dialog" aria-modal="true"></div></div>
+      <noscript><p class="sf-noscript">このゲームで遊ぶには JavaScript を有効にしてください。</p></noscript>
+    </div>
+
+    <!-- ゲーム枠直下の広告（hinata-game-below） -->
+
+    <div class="game-instructions">
+      <h3>遊び方</h3>
+      <ul>
+        <li><strong>ふやす</strong>: 「タマゴ」タブでタマゴを買う・「のはら」で野生のスライムを捕まえる・「すみか」に2匹入れてタマゴを産ませる、の3つの方法でスライムを増やします</li>
+        <li><strong>捕まえる</strong>: のはらで野生のスライムをタップするとリングが出ます。回っている目印が<strong>みどりの範囲</strong>に入ったら、もう1回タップ！ あみは時間で回復します</li>
+        <li><strong>進化</strong>: 牧場で<strong>同じ種類のスライムをドラッグで重ねる</strong>と、1段階上のスライムに進化します（タップで選んで、相手をタップしてもOK）。段階が上がるほどコインをたくさん出します</li>
+        <li><strong>枝分かれ</strong>: 3段階目から4段階目は、<strong>何を食べさせたか</strong>で進化先が決まります（つぼみスライムに「はなのみつ」をあげると はな、「きのこ」をあげると きのこ）。エサをあげていなければ、重ねたときに「どっちに進化する？」と聞かれます。<strong>施設がなくても進化できます</strong></li>
+        <li><strong>エサ</strong>: 花だん・まるた・井戸・こおりのいえ・かがみ・ひらいしんが、2分に1つエサを作ります。牧場でスライムを選んでから、エサのボタンを押すとあげられます</li>
+        <li><strong>お世話</strong>: しばらくお世話をしないと、スライムは<strong>ふつう</strong>（3時間・少し下がる）→<strong>しょんぼり</strong>（10時間・半分）→<strong>やさぐれ</strong>（2日・4分の1）になって、しゅうにゅうとつよさが下がります。<strong>なでる</strong>と1段階もどり、<strong>エサ</strong>をあげると一気に元気になります。いなくなったり逃げたりはしません</li>
+        <li><strong>合成</strong>: 「ごうせい台」に違う種類を2匹入れて「ごうせい！」。レシピが合えば新しいスライムが生まれます。合わなければ2匹とも戻るので損はしません</li>
+        <li><strong>突然変異</strong>: 進化や合成のたびに、まれに<strong>きらきら</strong>（色違い・収入3倍）や、突然変異でしか生まれない<strong>おやぶんスライム</strong>が出ます</li>
+        <li><strong>とうばつ</strong>: 牧場のつよさ上位3匹がボスと戦います。ボスを10体倒すと「みずべ」、20体倒すと「かざん」、40体倒すと「てんくう」ののはらが開きます。<strong>31体目からの ぬし は1時間に1体</strong>やってきます（2体までは待っていてくれます。まけても ぬし は帰りません）</li>
+        <li><strong>たんけん</strong>: ボスを30体倒すと開きます。つよさ上位3匹を「くらい もり」（1分）・「ふるい いせき」（5分）・「たからの どうくつ」（15分）へ送り出すと、コインと、<strong>たんけんでしか会えないスライム</strong>が見つかります。行っているあいだも牧場は動きます</li>
+        <li>ページを閉じていても、最大8時間ぶんのコインがたまります。記録はこのブラウザに保存されます</li>
+      </ul>
+    </div>
+
+    <div class="game-instructions">
+      <h3>スライムの進化と合成</h3>
+      <div class="sf-table-wrap">
+        <table class="sf-table">
+          <thead><tr><th>系統</th><th>1段階目</th><th>2段階目</th><th>3段階目</th><th>4段階目（エサで枝分かれ）</th></tr></thead>
+          <tbody>
+            <tr><th>くさ</th><td>みどりスライム</td><td>はっぱスライム</td><td>つぼみスライム</td><td>はなスライム（はなのみつ）／きのこスライム（きのこ）</td></tr>
+            <tr><th>みず</th><td>あおスライム</td><td>あわスライム</td><td>なみスライム</td><td>うみスライム（わきみず）／こおりスライム（こおりのみ）</td></tr>
+            <tr><th>ほのお</th><td>あかスライム</td><td>ほのおスライム</td><td>マグマスライム</td><td>たいようスライム（ひかりのつぶ）／かみなりスライム（でんきのみ）</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <ul>
+        <li>スライムは全部で<strong>54種類</strong>、ごうせい台のレシピは全部で<strong>21</strong>。はっぱスライムとあわスライムのように、<strong>違う系統をかけ合わせる</strong>と見つかります。合成で生まれたスライムどうしを、さらにかけ合わせるレシピもあります</li>
+        <li>「にじスライム」を見つけると、「にじ」タブから<strong>あたらしい牧場へ</strong>進めます。コイン・スライム・施設は最初からになりますが、<strong>にじのかけら</strong>1個につき しゅうにゅう と つよさ が10%ずつ上がります。ずかん・レシピ・ボスの記録は残ります</li>
+        <li><strong>相性（3すくみ）</strong>: ほのお ＞ くさ ＞ みず ＞ ほのお。有利な系統のスライムは、とうばつで<strong>つよさ1.5倍</strong>、不利だと0.67倍になります</li>
+        <li>どの種類も、同じ種類の親2匹を「すみか」に入れると同じ種類のタマゴが生まれます。親がきらきらだと、きらきらが生まれやすくなります</li>
+      </ul>
+    </div>
+
+    <div class="game-instructions">
+      <h3>スライム牧場 よくある質問</h3>
+      <ul>
+        <li><strong>Q. スライム牧場は閉じてもスライムがコインを集めてくれますか？</strong><br>A. はい。ページを閉じている間も、最大8時間ぶんのコインが半分の効率でたまります。のはらの野生スライム・あみ・すみかのタマゴも留守中に進むので、戻ってきたら捕まえたり、かえしたりできます。</li>
+        <li><strong>Q. 合成のレシピはどこで分かりますか？</strong><br>A. ごうせい台で違う種類のスライムを2匹かけ合わせて、はじめて見つかります。見つけたレシピは「けいとうず」タブに載り、まだ見つけていないレシピは「？ ＋ ？」で数だけ分かります。レシピが合わなかったときは2匹とも戻るので、損はしません。</li>
+        <li><strong>Q. ボスに勝てないときはどうすればいいですか？</strong><br>A. 牧場のつよさ上位3匹が戦うので、進化や合成でつよいスライムを作りましょう。相性は「ほのお＞くさ＞みず＞ほのお」で、有利な系統だと1.5倍のつよさになります。バトル中に画面をタップしておうえんすると、ぎりぎりの勝負を押し切れることがあります。負けても失うものはありません。</li>
+      </ul>
+    </div>
+
+    <div class="game-promo">
+      <h3>このゲーム、自分でも作れるよ！</h3>
+      <p>
+        スライムの種類・進化先・レシピは、ぜんぶ1つの「表（データ）」に書いてあります。<br>
+        表に1行足すだけで、新しいスライムが増やせるしくみです。<br><br>
+        ひなテックでは、こうしたゲームの<br>
+        作り方を楽しく学べます！
+      </p>
+      <div class="promo-links">
+        <a href="tutorial/" class="btn-primary">このゲームの作り方を見る →</a>
+        <a href="https://hinata-ya.tech/online/" class="btn-primary" data-class-link="game-promo">オンラインで習ってみる（全国OK）→</a>
+        <a href="source/" class="btn-secondary">ソースコードを見る →</a>
+      </div>
+    </div>
+
+    <div class="other-games">
+      <a href="../../">← 他のゲームも遊ぶ</a>
+    </div>
+  </div>
+  <div id="footer"></div>
+  <script src="../../js/common.js?v=20260914" data-base="../../"></script>
+  <!-- ランキングを持たないので leaderboard.js は読まず、プレイ履歴の計測だけ直接読む -->
+  <script src="../../js/play-track.js?v=20260921" async></script>
+  <script src="../../js/game-audio.js?v=20260902"></script>
+  <script src="game.js?v=20260923"></script>
+</body>
+</html>
